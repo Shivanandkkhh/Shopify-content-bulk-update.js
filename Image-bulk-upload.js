@@ -9,7 +9,19 @@ const ADMIN_API_ACCESS_TOKEN = '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';
 // Load CSV file
 const csvFilePath = './images.csv';
 const csvContent = fs.readFileSync(csvFilePath);
-const records = parse(csvContent, { columns: true, skip_empty_lines: true });
+const records = parse(csvContent, { 
+  columns: true, 
+  skip_empty_lines: true,
+  skip_records_with_error: true,
+  on_record: (record, { lines }) => {
+    // Skip records that don't have both url and altText
+    if (!record.url || !record.altText) {
+      console.log(`⚠️ Skipping malformed record on line ${lines}: ${JSON.stringify(record)}`);
+      return null;
+    }
+    return record;
+  }
+});
 
 // GraphQL mutation to upload files
 const fileCreateMutation = `
